@@ -9,7 +9,7 @@ npm package to deploy node.js apps.
 1. Install globally with npm:
 
   ```
-  sudo npm install -g https://github.com/indabamusic/rodent/archive/0.0.0.tar.gz
+  sudo npm install -g rodent
   ```
 
 2. Make sure these properties exist in your `package.json`:
