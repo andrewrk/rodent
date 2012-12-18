@@ -1,0 +1,17 @@
+{
+  "name": "squirrel",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Indaba-specific tool to deploy our node.js apps",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/indabamusic/squirrel.git"
+  },
+  "devDependencies": {
+    "mocha": "~1.7.4"
+  }
+}
