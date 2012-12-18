@@ -23,9 +23,13 @@ var tasks = {
     fn: stop,
     info: "<target> - stops the remote server",
   },
+  diff: {
+    fn: diff,
+    info: "<target> [--branch branch] - display what will be deployed on target",
+  },
   deploy: {
     fn: deploy,
-    info: "<target> [--branch branch] - deploy code (default master)",
+    info: "<target> [--branch branch] - deploy code",
   },
   abort: {
     fn: abort,
@@ -157,6 +161,27 @@ function monitor(optParser, packageJson) {
   ]);
 }
 
+function diff (optParser, packageJson) {
+  var argv = optParser
+    .demand(1)
+    .default('branch', 'master')
+    .argv;
+  var targetName = argv._[1]
+  var targetConf = packageJson.rodent.targets[targetName]
+  var branch = argv.branch;
+  getDeployDiff(packageJson, targetName, branch, "%C(yellow)%h%Creset %Cgreen%cd%Creset %Cred%an%Creset %s", function(err, gitLog) {
+    if (err) {
+      console.error("Unable to get diff:", err.stack);
+    } else {
+      if (! gitLog.trim()) {
+        console.log("No new code to deploy.");
+      } else {
+        console.log(gitLog);
+      }
+    }
+  });
+}
+
 function qescape(it){
   return it.replace(/\\/, "\\\\").replace(/\'/, "\\'");
 }
@@ -212,7 +237,7 @@ function appPath(packageJson, targetName){
   return "/home/" + packageJson.rodent.targets[targetName].ssh.user + "/" + targetName + "/" + packageJson.name;
 }
 
-function notifyFlowdock(packageJson, targetName, branch) {
+function getDeployDiff(packageJson, targetName, branch, format, cb) {
   var exec = require('child_process').exec;
   var sshConf = packageJson.rodent.targets[targetName].ssh;
   var firstHost = sshConf.hosts[0];
@@ -224,22 +249,35 @@ function notifyFlowdock(packageJson, targetName, branch) {
     "'cd " + destAppPath + " && git rev-parse HEAD'";
   exec(cmd, function(err, stdout, stderr) {
     if (err) {
-      console.error("Unable to notify flowdock. Error running `" + cmd + "`:\n" + stderr);
+      err.stderr = stderr;
+      err.stdout = stdout;
+      err.cmd = cmd;
+      cb(err);
     } else {
       gitDiff(stdout.trim());
     }
   });
   function gitDiff(rev) {
-    var cmd = "git log --pretty=format:\"<li>%h %cd %an <b>%s</b></li>\" " + rev + "..origin/" + branch
+    var cmd = "git log --pretty=format:\"" + format + "\" " + rev + "..origin/" + branch
     exec(cmd, function(err, stdout, stderr) {
       if (err) {
-        console.error("Unable to notify flowdock. Error running `" + cmd +"`:\n" + stderr);
+        err.stderr = stderr;
+        err.stdout = stdout;
+        err.cmd = cmd;
+        cb(err);
       } else {
-        postFlowdock(stdout);
+        cb(null, stdout);
       }
     });
   }
-  function postFlowdock(gitLog) {
+}
+
+function notifyFlowdock(packageJson, targetName, branch) {
+  getDeployDiff(packageJson, targetName, branch, "<li>%h %cd %an <b>%s</b></li>", function(err, gitLog) {
+    if (err) {
+      console.error("Unable to notify flowdock:", err.stack);
+      return;
+    }
     var content = "The following is about to be deployed:<ul>" + gitLog + "</ul>";
     var subject = packageJson.name + " deployed to " + targetName + " with branch " + branch;
     var payload = JSON.stringify({
@@ -269,5 +307,5 @@ function notifyFlowdock(packageJson, targetName, branch) {
     });
     request.write(payload);
     request.end();
-  }
+  });
 }
