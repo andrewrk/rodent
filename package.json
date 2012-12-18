@@ -2,7 +2,7 @@
   "name": "squirrel",
   "version": "0.0.0",
   "private": true,
-  "description": "Indaba-specific tool to deploy our node.js apps",
+  "description": "deploy node.js apps",
   "main": "index.js",
   "scripts": {
     "test": "mocha"
@@ -13,5 +13,11 @@
   },
   "devDependencies": {
     "mocha": "~1.7.4"
+  },
+  "dependencies": {
+    "optimist": "~0.3.5"
+  },
+  "bin": {
+    "squirrel": "index.js"
   }
 }
