@@ -5,6 +5,7 @@ var optimist = require('optimist')
   , path = require('path')
   , https = require('https')
   , url = require('url')
+  , Batch = require('batch')
 
 var tasks = {
   list: {
@@ -239,26 +240,43 @@ function appPath(packageJson, targetName){
 
 function getDeployDiff(packageJson, targetName, branch, format, cb) {
   var exec = require('child_process').exec;
-  var sshConf = packageJson.rodent.targets[targetName].ssh;
-  var firstHost = sshConf.hosts[0];
-  var destAppPath = appPath(packageJson, targetName);
-  var cmd = "ssh " +
-    "-o ForwardAgent=yes " +
-    "-p " + sshConf.port + " " +
-    sshConf.user + "@" + firstHost + " " +
-    "'cd " + destAppPath + " && git rev-parse HEAD'";
-  exec(cmd, function(err, stdout, stderr) {
-    if (err) {
-      err.stderr = stderr;
-      err.stdout = stdout;
-      err.cmd = cmd;
-      cb(err);
-    } else {
-      gitDiff(stdout.trim());
-    }
+  var batch = new Batch();
+  batch.push(function(cb) {
+    var sshConf = packageJson.rodent.targets[targetName].ssh;
+    var firstHost = sshConf.hosts[0];
+    var destAppPath = appPath(packageJson, targetName);
+    var cmd = "ssh " +
+      "-o ForwardAgent=yes " +
+      "-p " + sshConf.port + " " +
+      sshConf.user + "@" + firstHost + " " +
+      "'cd " + destAppPath + " && git rev-parse HEAD'";
+    exec(cmd, function(err, stdout, stderr) {
+      if (err) {
+        err.stderr = stderr;
+        err.stdout = stdout;
+        err.cmd = cmd;
+        cb(err);
+      } else {
+        cb(null, stdout.trim());
+      }
+    });
   });
-  function gitDiff(rev) {
-    var cmd = "git log --pretty=format:\"" + format + "\" " + rev + "..origin/" + branch
+  batch.push(function(cb) {
+    var cmd = "git fetch origin";
+    exec(cmd, function(err, stdout, stderr) {
+      if (err) {
+        err.stderr = stderr;
+        err.stdout = stdout;
+        err.cmd = cmd;
+        cb(err);
+      } else {
+        cb();
+      }
+    });
+  });
+  batch.end(function(err, results) {
+    var rev = results[0];
+    var cmd = "git log --pretty=format:\"" + format + "\" " + rev + "..origin/" + branch;
     exec(cmd, function(err, stdout, stderr) {
       if (err) {
         err.stderr = stderr;
@@ -269,7 +287,7 @@ function getDeployDiff(packageJson, targetName, branch, format, cb) {
         cb(null, stdout);
       }
     });
-  }
+  });
 }
 
 function notifyFlowdock(packageJson, targetName, branch) {
