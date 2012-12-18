@@ -1,4 +1,4 @@
-describe("squirrel", function() {
+describe("rodent", function() {
   it("list");
   it("init");
   it("start");

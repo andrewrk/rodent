@@ -1,5 +1,5 @@
 {
-  "name": "squirrel",
+  "name": "rodent",
   "version": "0.0.0",
   "private": true,
   "description": "deploy node.js apps",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/indabamusic/squirrel.git"
+    "url": "git://github.com/indabamusic/rodent.git"
   },
   "devDependencies": {
     "mocha": "~1.7.4"
@@ -18,6 +18,6 @@
     "optimist": "~0.3.5"
   },
   "bin": {
-    "squirrel": "index.js"
+    "rodent": "index.js"
   }
 }

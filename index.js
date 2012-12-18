@@ -63,8 +63,8 @@ function genUsage() {
 
 function list(optParser, packageJson) {
   var name, target;
-  for (name in packageJson.squirrel.targets) {
-    target = packageJson.squirrel.targets[name];
+  for (name in packageJson.rodent.targets) {
+    target = packageJson.rodent.targets[name];
     console.log(name)
     target.ssh.hosts.forEach(printHost);
   }
@@ -75,7 +75,7 @@ function list(optParser, packageJson) {
 function init(optParser, packageJson) {
   var argv = optParser.demand(1).argv;
   var targetName = argv._[1]
-  var targetConf = packageJson.squirrel.targets[targetName]
+  var targetConf = packageJson.rodent.targets[targetName]
   var destAppPath = appPath(packageJson, targetName);
   var repoUrl = packageJson.repository.url;
   if (! repoUrl || packageJson.repository.type !== 'git') {
@@ -92,7 +92,7 @@ function init(optParser, packageJson) {
 function start(optParser, packageJson) {
   var argv = optParser.demand(1).argv;
   var targetName = argv._[1]
-  var targetConf = packageJson.squirrel.targets[targetName]
+  var targetConf = packageJson.rodent.targets[targetName]
   var env = inlineEnv(targetConf.env);
   sshs(targetConf.ssh, [
     "cd " + appPath(packageJson, targetName),
@@ -102,7 +102,7 @@ function start(optParser, packageJson) {
 function stop(optParser, packageJson) {
   var argv = optParser.demand(1).argv;
   var targetName = argv._[1]
-  var targetConf = packageJson.squirrel.targets[targetName]
+  var targetConf = packageJson.rodent.targets[targetName]
   sshs(targetConf.ssh, [
     "cd " + appPath(packageJson, targetName),
     "npm stop"
@@ -114,7 +114,7 @@ function deploy(optParser, packageJson) {
     .default('branch', 'master')
     .argv;
   var targetName = argv._[1]
-  var targetConf = packageJson.squirrel.targets[targetName]
+  var targetConf = packageJson.rodent.targets[targetName]
   var env = inlineEnv(targetConf.env);
   sshs(targetConf.ssh, [
     "cd " + appPath(packageJson, targetName),
@@ -129,7 +129,7 @@ function deploy(optParser, packageJson) {
 function abort(optParser, packageJson) {
   var argv = optParser.demand(1).argv;
   var targetName = argv._[1]
-  var targetConf = packageJson.squirrel.targets[targetName]
+  var targetConf = packageJson.rodent.targets[targetName]
   sshs(targetConf.ssh, [
     "cd " + appPath(packageJson, targetName),
     "npm run deploy-abort"
@@ -138,8 +138,8 @@ function abort(optParser, packageJson) {
 function monitor(optParser, packageJson) {
   var argv = optParser.demand(1).argv;
   var targetName = argv._[1]
-  var targetConf = packageJson.squirrel.targets[targetName]
-  var tailCmd = packageJson.squirrel.commands.monitor || "tail -f *.log";
+  var targetConf = packageJson.rodent.targets[targetName]
+  var tailCmd = packageJson.rodent.commands.monitor || "tail -f *.log";
   sshs(targetConf.ssh, [
     "cd " + appPath(packageJson, targetName),
     tailCmd
@@ -198,5 +198,5 @@ function exec(cmd, args, opts, cb){
 }
 
 function appPath(packageJson, targetName){
-  return "/home/" + packageJson.squirrel.targets[targetName].ssh.user + "/" + targetName + "/" + packageJson.name;
+  return "/home/" + packageJson.rodent.targets[targetName].ssh.user + "/" + targetName + "/" + packageJson.name;
 }

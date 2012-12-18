@@ -1,6 +1,6 @@
-# squirrel
+# rodent
 
-Indaba-specific npm package to deploy our node.js apps.
+npm package to deploy node.js apps.
 
 ![](http://static.fjcdn.com/pictures/epic_c3c08f_738620.jpg)
 
@@ -9,7 +9,7 @@ Indaba-specific npm package to deploy our node.js apps.
 1. Install globally with npm:
 
   ```
-  npm install -g https://github.com/indabamusic/squirrel/tarball/0.0.0
+  sudo npm install -g https://github.com/indabamusic/rodent/archive/0.0.0.tar.gz
   ```
 
 2. Make sure these properties exist in your `package.json`:
@@ -25,7 +25,7 @@ Indaba-specific npm package to deploy our node.js apps.
       "deploy": "naught deploy",
       "deploy-abort": "naught deploy-abort"
     },
-    "squirrel": {
+    "rodent": {
       "commands": {
         "monitor": "tail -f *.log"
       },
@@ -72,6 +72,6 @@ Indaba-specific npm package to deploy our node.js apps.
 4. Use the CLI to deploy your code like a boss:
 
   ```
-  squirrel --help
+  rodent --help
   ```
 
