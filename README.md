@@ -26,6 +26,9 @@ sudo npm install -g rodent
     "deploy-abort": "naught deploy-abort"
   },
   "rodent": {
+    "flowdock": {
+      "token": "38eb39023d382adff2eff209effb398f"
+    },
     "commands": {
       "monitor": "tail -f *.log"
     },

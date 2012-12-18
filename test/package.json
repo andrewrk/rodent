@@ -30,6 +30,7 @@
     "batch": "~0.2.1"
   },
   "rodent": {
+    "flowdock": {},
     "commands": {
       "monitor": "tail -f log/*"
     },

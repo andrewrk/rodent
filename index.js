@@ -3,6 +3,8 @@
 var optimist = require('optimist')
   , spawn = require('child_process').spawn
   , path = require('path')
+  , https = require('https')
+  , url = require('url')
 
 var tasks = {
   list: {
@@ -39,6 +41,10 @@ main();
 
 function main() {
   var packageJson = require(path.join(process.cwd(), "package.json"));
+  if (! packageJson.rodent) {
+    console.error("package.json missing 'rodent' config");
+    process.exit(1);
+  }
   var optParser = optimist
     .demand(1)
     .usage(genUsage())
@@ -116,10 +122,14 @@ function deploy(optParser, packageJson) {
   var targetName = argv._[1]
   var targetConf = packageJson.rodent.targets[targetName]
   var env = inlineEnv(targetConf.env);
+  var branch = argv.branch;
+
+  notifyFlowdock(packageJson, targetName, branch);
+
   sshs(targetConf.ssh, [
     "cd " + appPath(packageJson, targetName),
     "git fetch",
-    "git checkout origin/" + argv.branch,
+    "git checkout origin/" + branch,
     "git submodule update",
     "npm prune",
     "npm install",
@@ -139,6 +149,7 @@ function monitor(optParser, packageJson) {
   var argv = optParser.demand(1).argv;
   var targetName = argv._[1]
   var targetConf = packageJson.rodent.targets[targetName]
+  packageJson.rodent.commands = packageJson.rodent.commands || {};
   var tailCmd = packageJson.rodent.commands.monitor || "tail -f *.log";
   sshs(targetConf.ssh, [
     "cd " + appPath(packageJson, targetName),
@@ -199,4 +210,64 @@ function exec(cmd, args, opts, cb){
 
 function appPath(packageJson, targetName){
   return "/home/" + packageJson.rodent.targets[targetName].ssh.user + "/" + targetName + "/" + packageJson.name;
+}
+
+function notifyFlowdock(packageJson, targetName, branch) {
+  var exec = require('child_process').exec;
+  var sshConf = packageJson.rodent.targets[targetName].ssh;
+  var firstHost = sshConf.hosts[0];
+  var destAppPath = appPath(packageJson, targetName);
+  var cmd = "ssh " +
+    "-o ForwardAgent=yes " +
+    "-p " + sshConf.port + " " +
+    sshConf.user + "@" + firstHost + " " +
+    "'cd " + destAppPath + " && git rev-parse HEAD'";
+  exec(cmd, function(err, stdout, stderr) {
+    if (err) {
+      console.error("Unable to notify flowdock. Error running `" + cmd + "`:\n" + stderr);
+    } else {
+      gitDiff(stdout.trim());
+    }
+  });
+  function gitDiff(rev) {
+    var cmd = "git log --pretty=format:\"<li>%h %cd %an <b>%s</b></li>\" " + rev + "..origin/" + branch
+    exec(cmd, function(err, stdout, stderr) {
+      if (err) {
+        console.error("Unable to notify flowdock. Error running `" + cmd +"`:\n" + stderr);
+      } else {
+        postFlowdock(stdout);
+      }
+    });
+  }
+  function postFlowdock(gitLog) {
+    var content = "The following is about to be deployed:<ul>" + gitLog + "</ul>";
+    var subject = packageJson.name + " deployed to " + targetName + " with branch " + branch;
+    var payload = JSON.stringify({
+      source: "rodent",
+      from_address: "rodent@indabamusic.com",
+      subject: subject,
+      content: content,
+    });
+    console.log("subject", subject, "content", content);
+    var token = packageJson.rodent.flowdock.token;
+    var options = url.parse("https://api.flowdock.com/v1/messages/team_inbox/" + token);
+    options.method = "POST";
+    options.headers = {
+      "Content-Type": "application/json",
+      "Content-Length": payload.length,
+    };
+    var request = https.request(options, function(resp) {
+      if (resp.statusCode !== 200) {
+        console.error("Posting to flowdock status code " + resp.statusCode);
+      }
+      resp.on('error', function(err) {
+        console.error("Response error posting to flowdock: " + err.stack);
+      });
+    });
+    request.on('error', function(err) {
+      console.error("Request error posting to flowdock: " + err.stack);
+    });
+    request.write(payload);
+    request.end();
+  }
 }
