@@ -129,7 +129,9 @@ function deploy(optParser, packageJson) {
   var env = inlineEnv(targetConf.env);
   var branch = argv.branch;
 
-  notifyFlowdock(packageJson, targetName, branch);
+  if (packageJson.rodent.flowdock) {
+    notifyFlowdock(packageJson, targetName, branch);
+  }
 
   sshs(targetConf.ssh, [
     "cd " + appPath(packageJson, targetName),
