@@ -186,11 +186,11 @@ function diff (optParser, packageJson) {
 }
 
 function qescape(it){
-  return it.replace(/\\/, "\\\\").replace(/\'/, "\\'");
+  return it.replace(/\\/g, "\\\\").replace(/\'/g, "\\'").replace(/\`/g, "\\`");
 }
 
 function qqescape(it){
-  return it.replace(/\\/, "\\\\").replace(/\"/, '\\"');
+  return it.replace(/\\/g, "\\\\").replace(/\"/g, '\\"');
 }
 
 function ssh(conf, cmd){
