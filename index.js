@@ -277,6 +277,7 @@ function getDeployDiff(packageJson, targetName, branch, format, cb) {
     });
   });
   batch.end(function(err, results) {
+    if (err) return cb(err);
     var rev = results[0];
     var cmd = "git log --pretty=format:\"" + format + "\" " + rev + "..origin/" + branch;
     exec(cmd, function(err, stdout, stderr) {
