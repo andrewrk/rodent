@@ -122,26 +122,37 @@ function stop(optParser, packageJson) {
 function deploy(optParser, packageJson) {
   var argv = optParser
     .demand(1)
-    .default('branch', 'master')
+    .default('branch', null)
     .argv;
   var targetName = argv._[1]
   var targetConf = packageJson.rodent.targets[targetName]
   var env = inlineEnv(targetConf.env);
-  var branch = argv.branch;
-
-  if (packageJson.rodent.flowdock) {
-    notifyFlowdock(packageJson, targetName, branch);
+  if (argv.branch) {
+    proceed(null, argv.branch);
+  } else {
+    getDefaultBranch(proceed);
   }
 
-  sshs(targetConf.ssh, [
-    "cd " + appPath(packageJson, targetName),
-    "git fetch",
-    "git checkout origin/" + branch,
-    "git submodule update",
-    "npm prune",
-    "npm install",
-    env + " npm run deploy",
-  ]);
+  function proceed(err, branch) {
+    if (err) {
+      console.error("Unable to get current branch:", err.stack);
+      return;
+    }
+
+    if (packageJson.rodent.flowdock) {
+      notifyFlowdock(packageJson, targetName, branch);
+    }
+
+    sshs(targetConf.ssh, [
+      "cd " + appPath(packageJson, targetName),
+      "git fetch",
+      "git checkout origin/" + branch,
+      "git submodule update",
+      "npm prune",
+      "npm install",
+      env + " npm run deploy",
+    ]);
+  }
 }
 function abort(optParser, packageJson) {
   var argv = optParser.demand(1).argv;
@@ -167,22 +178,32 @@ function monitor(optParser, packageJson) {
 function diff (optParser, packageJson) {
   var argv = optParser
     .demand(1)
-    .default('branch', 'master')
+    .default('branch', null)
     .argv;
   var targetName = argv._[1]
   var targetConf = packageJson.rodent.targets[targetName]
-  var branch = argv.branch;
-  getDeployDiff(packageJson, targetName, branch, "%C(yellow)%h%Creset %Cgreen%cd%Creset %Cred%an%Creset %s", function(err, gitLog) {
+  if (argv.branch) {
+    proceed(null, argv.branch);
+  } else {
+    getDefaultBranch(proceed);
+  }
+  function proceed(err, branch) {
     if (err) {
-      console.error("Unable to get diff:", err.stack);
-    } else {
-      if (! gitLog.trim()) {
-        console.log("No new code to deploy.");
-      } else {
-        console.log(gitLog);
-      }
+      console.error("unable to get current branch:", err.stack);
+      return;
     }
-  });
+    getDeployDiff(packageJson, targetName, branch, "%C(yellow)%h%Creset %Cgreen%cd%Creset %Cred%an%Creset %s", function(err, gitLog) {
+      if (err) {
+        console.error("Unable to get diff:", err.stack);
+      } else {
+        if (! gitLog.trim()) {
+          console.log("No new code to deploy.");
+        } else {
+          console.log(gitLog);
+        }
+      }
+    });
+  }
 }
 
 function qescape(it){
@@ -287,7 +308,7 @@ function getDeployDiff(packageJson, targetName, branch, format, cb) {
         err.cmd = cmd;
         cb(err);
       } else {
-        cb(null, stdout);
+        cb(null, stdout.trim());
       }
     });
   });
@@ -328,5 +349,20 @@ function notifyFlowdock(packageJson, targetName, branch) {
     });
     request.write(payload);
     request.end();
+  });
+}
+
+function getDefaultBranch(cb) {
+  var exec = require('child_process').exec;
+  var cmd = "git rev-parse --abbrev-ref HEAD";
+  exec(cmd, function(err, stdout, stderr) {
+    if (err) {
+      err.stderr = stderr;
+      err.stdout = stdout;
+      err.cmd = cmd;
+      cb(err);
+    } else {
+      cb(null, stdout.trim());
+    }
   });
 }
