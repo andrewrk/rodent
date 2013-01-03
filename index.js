@@ -218,6 +218,7 @@ function ssh(conf, cmd){
   conf.hosts.forEach(function(host) {
     var args = [
       "-o", "ForwardAgent=yes",
+      "-o", "StrictHostKeyChecking=no",
       "-p", conf.port,
       conf.user + "@" + host,
       "bash -c '" + qescape(cmd) + "'"
