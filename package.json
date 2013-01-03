@@ -1,6 +1,6 @@
 {
   "name": "rodent",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "deploy node.js apps",
   "main": "index.js",
   "scripts": {
