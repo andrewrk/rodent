@@ -45,17 +45,17 @@ var tasks = {
 main();
 
 function main() {
-  var packageJson = require(path.join(process.cwd(), "package.json"));
-  if (! packageJson.rodent) {
-    console.error("package.json missing 'rodent' config");
-    process.exit(1);
-  }
   var optParser = optimist
     .demand(1)
     .usage(genUsage())
   var cmd = optParser.argv._[0];
   var task = tasks[cmd];
   if (task) {
+    var packageJson = require(path.join(process.cwd(), "package.json"));
+    if (! packageJson.rodent) {
+      console.error("package.json missing 'rodent' config");
+      process.exit(1);
+    }
     task.fn(optParser, packageJson);
   } else {
     optParser.showHelp()
