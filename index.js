@@ -235,8 +235,8 @@ function sshs(conf, cmds){
 function inlineEnv(it){
   var k, v, items = [];
   for (k in it) {
-    v = it[k];
-    items.push(k + "=\"" + qqescape(v.toString()) + "\"");
+    v = it[k] == null ? "" : it[k].toString();
+    items.push(k + "=\"" + qqescape(v) + "\"");
   }
   return items.join(" ");
 }
