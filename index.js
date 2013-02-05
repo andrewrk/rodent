@@ -323,11 +323,14 @@ function notifyFlowdock(packageJson, targetName, branch) {
     }
     var content = "The following is about to be deployed:<ul>" + gitLog + "</ul>";
     var subject = packageJson.name + " deployed to " + targetName + " with branch " + branch;
+    var tags    = ["#deploy", "#"+packageJson.name, "#"+targetName];
     var payload = JSON.stringify({
       source: "rodent",
       from_address: "rodent@indabamusic.com",
+      project: packageJson.name,
       subject: subject,
       content: content,
+      tags: tags
     });
     console.log("subject", subject, "content", content);
     var token = packageJson.rodent.flowdock.token;
