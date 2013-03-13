@@ -323,7 +323,7 @@ function getDeployDiff(packageJson, targetName, branch, format, cb) {
 function notifyLibrato(packageJson, targetName, branch) {
   getDeployDiff(packageJson, targetName, branch, "<li>%h %cd %an <b>%s</b></li>", function(err, gitLog) {
     if (err) {
-      console.error("Unable to notify flowdock:", err.stack);
+      console.error("Unable to notify librato:", err.stack);
       return;
     }
 
