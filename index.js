@@ -143,6 +143,10 @@ function deploy(optParser, packageJson) {
       notifyFlowdock(packageJson, targetName, branch);
     }
 
+    if (packageJson.rodent.librato) {
+      notifyLibrato(packageJson, targetName, branch);
+    }
+
     sshs(targetConf.ssh, [
       "cd " + appPath(packageJson, targetName),
       "git fetch",
@@ -312,6 +316,46 @@ function getDeployDiff(packageJson, targetName, branch, format, cb) {
         cb(null, stdout.trim());
       }
     });
+  });
+}
+
+
+function notifyLibrato(packageJson, targetName, branch) {
+  getDeployDiff(packageJson, targetName, branch, "<li>%h %cd %an <b>%s</b></li>", function(err, gitLog) {
+    if (err) {
+      console.error("Unable to notify flowdock:", err.stack);
+      return;
+    }
+
+    var user = packageJson.rodent.librato.email
+    var pass = packageJson.rodent.librato.api_token
+
+    var payload = JSON.stringify({
+      title: "deployed " + branch,
+      source: targetName,
+      description: gitLog
+    });
+    var authorization = 'Basic ' + new Buffer(user + ':' + pass).toString('base64');
+    var options = url.parse("https://metrics-api.librato.com/v1/annotations/" + packageJson.name + "_deploys");
+    options.method = "POST";
+    options.headers = {
+      "Content-Type": "application/json",
+      "Content-Length": payload.length,
+      "Authorization": authorization
+    };
+    var request = https.request(options, function(resp) {
+      if (resp.statusCode !== 201) {
+        console.error("Posting to librato status code " + resp.statusCode)
+      }
+      resp.on('error', function(err) {
+        console.error("Response error posting to librato: " + err.stack)
+      });
+    });
+    request.on('error', function(err) {
+      console.error("Request error posting to librato: " + err.stack)
+    });
+    request.write(payload);
+    request.end();
   });
 }
 
