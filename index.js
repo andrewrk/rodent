@@ -3,9 +3,8 @@
 var optimist = require('optimist')
   , spawn = require('child_process').spawn
   , path = require('path')
-  , https = require('https')
-  , url = require('url')
   , Batch = require('batch')
+  , superagent = require('superagent')
 
 var tasks = {
   list: {
@@ -330,32 +329,26 @@ function notifyLibrato(packageJson, targetName, branch) {
     var user = packageJson.rodent.librato.email
     var pass = packageJson.rodent.librato.api_token
 
-    var payload = JSON.stringify({
+    var payload = {
       title: "deployed " + branch,
       source: targetName,
-      description: gitLog
-    });
-    var authorization = 'Basic ' + new Buffer(user + ':' + pass).toString('base64');
-    var options = url.parse("https://metrics-api.librato.com/v1/annotations/" + packageJson.name + "_deploys");
-    options.method = "POST";
-    options.headers = {
-      "Content-Type": "application/json",
-      "Content-Length": payload.length,
-      "Authorization": authorization
+      description: gitLog,
     };
-    var request = https.request(options, function(resp) {
-      if (resp.statusCode !== 201) {
-        console.error("Posting to librato status code " + resp.statusCode)
+    var authorization = 'Basic ' + new Buffer(user + ':' + pass).toString('base64');
+    var eventName = packageJson.name + "_deploys";
+    var url = "https://metrics-api.librato.com/v1/annotations/" + eventName;
+    var request = superagent.post(url);
+    request.set('Authorization', authorization);
+    request.send(payload);
+    request.end(function(err, resp) {
+      if (err) {
+        console.error("Error posting to librato:", err.stack)
+      } else if (resp.statusType !== 2) {
+        console.error("Posting to librato http code", resp.status, resp.text);
+      } else {
+        console.log("Notified Librato");
       }
-      resp.on('error', function(err) {
-        console.error("Response error posting to librato: " + err.stack)
-      });
     });
-    request.on('error', function(err) {
-      console.error("Request error posting to librato: " + err.stack)
-    });
-    request.write(payload);
-    request.end();
   });
 }
 
@@ -368,35 +361,26 @@ function notifyFlowdock(packageJson, targetName, branch) {
     var content = "The following is about to be deployed:<ul>" + gitLog + "</ul>";
     var subject = packageJson.name + " deployed to " + targetName + " with branch " + branch;
     var tags    = ["#deploy", "#"+packageJson.name, "#"+targetName];
-    var payload = JSON.stringify({
+    var payload = {
       source: "rodent",
       from_address: "rodent@indabamusic.com",
       project: packageJson.name,
       subject: subject,
       content: content,
       tags: tags
-    });
-    console.log("subject", subject, "content", content);
-    var token = packageJson.rodent.flowdock.token;
-    var options = url.parse("https://api.flowdock.com/v1/messages/team_inbox/" + token);
-    options.method = "POST";
-    options.headers = {
-      "Content-Type": "application/json",
-      "Content-Length": payload.length,
     };
-    var request = https.request(options, function(resp) {
-      if (resp.statusCode !== 200) {
-        console.error("Posting to flowdock status code " + resp.statusCode);
+    var token = packageJson.rodent.flowdock.token;
+    var request = superagent.post("https://api.flowdock.com/v1/messages/team_inbox/" + token);
+    request.send(payload);
+    request.end(function(err, resp) {
+      if (err) {
+        console.error("Error posting to flowdock:", err.stack);
+      } else if (resp.statusType !== 2) {
+        console.error("Posting to flowdock status code", resp.status, resp.text);
+      } else {
+        console.log("Notified flowdock");
       }
-      resp.on('error', function(err) {
-        console.error("Response error posting to flowdock: " + err.stack);
-      });
     });
-    request.on('error', function(err) {
-      console.error("Request error posting to flowdock: " + err.stack);
-    });
-    request.write(payload);
-    request.end();
   });
 }
 
