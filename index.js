@@ -5,6 +5,8 @@ var optimist = require('optimist')
   , path = require('path')
   , Batch = require('batch')
   , superagent = require('superagent')
+  , semver = require('semver')
+  , rodentVersion = require('./package').version
 
 var tasks = {
   list: {
@@ -53,6 +55,13 @@ function main() {
     var packageJson = require(path.join(process.cwd(), "package.json"));
     if (! packageJson.rodent) {
       console.error("package.json missing 'rodent' config");
+      process.exit(1);
+    }
+    var requiredRodentVersion = packageJson.rodent.version;
+    if (requiredRodentVersion &&
+        ! semver.satisfies(rodentVersion, requiredRodentVersion))
+    {
+      console.error("package requires rodent version", requiredRodentVersion);
       process.exit(1);
     }
     task.fn(optParser, packageJson);
