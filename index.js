@@ -41,6 +41,10 @@ var tasks = {
     fn: monitor,
     info: "<target> - tail logs on target",
   },
+  exec: {
+    fn: runWithEnv,
+    info: "<target> [command] - run command in target's environment",
+  },
 };
 
 main();
@@ -95,6 +99,10 @@ function init(optParser, packageJson) {
   var argv = optParser.demand(1).argv;
   var targetName = argv._[1]
   var targetConf = packageJson.rodent.targets[targetName]
+  if (! targetConf) {
+    console.error("Invalid target:", targetName);
+    process.exit(1);
+  }
   var destAppPath = appPath(packageJson, targetName);
   var repoUrl = packageJson.repository.url;
   if (! repoUrl || packageJson.repository.type !== 'git') {
@@ -112,6 +120,10 @@ function start(optParser, packageJson) {
   var argv = optParser.demand(1).argv;
   var targetName = argv._[1]
   var targetConf = packageJson.rodent.targets[targetName]
+  if (! targetConf) {
+    console.error("Invalid target:", targetName);
+    process.exit(1);
+  }
   var env = inlineEnv(targetConf.env);
   sshs(targetConf.ssh, [
     "cd " + appPath(packageJson, targetName),
@@ -122,6 +134,10 @@ function stop(optParser, packageJson) {
   var argv = optParser.demand(1).argv;
   var targetName = argv._[1]
   var targetConf = packageJson.rodent.targets[targetName]
+  if (! targetConf) {
+    console.error("Invalid target:", targetName);
+    process.exit(1);
+  }
   sshs(targetConf.ssh, [
     "cd " + appPath(packageJson, targetName),
     "npm stop"
@@ -134,6 +150,10 @@ function deploy(optParser, packageJson) {
     .argv;
   var targetName = argv._[1]
   var targetConf = packageJson.rodent.targets[targetName]
+  if (! targetConf) {
+    console.error("Invalid target:", targetName);
+    process.exit(1);
+  }
   var env = inlineEnv(targetConf.env);
   if (argv.branch) {
     proceed(null, argv.branch);
@@ -170,6 +190,10 @@ function abort(optParser, packageJson) {
   var argv = optParser.demand(1).argv;
   var targetName = argv._[1]
   var targetConf = packageJson.rodent.targets[targetName]
+  if (! targetConf) {
+    console.error("Invalid target:", targetName);
+    process.exit(1);
+  }
   sshs(targetConf.ssh, [
     "cd " + appPath(packageJson, targetName),
     "npm run deploy-abort"
@@ -179,6 +203,10 @@ function monitor(optParser, packageJson) {
   var argv = optParser.demand(1).argv;
   var targetName = argv._[1]
   var targetConf = packageJson.rodent.targets[targetName]
+  if (! targetConf) {
+    console.error("Invalid target:", targetName);
+    process.exit(1);
+  }
   packageJson.rodent.commands = packageJson.rodent.commands || {};
   var tailCmd = packageJson.rodent.commands.monitor || "tail -f *.log";
   sshs(targetConf.ssh, [
@@ -194,6 +222,10 @@ function diff (optParser, packageJson) {
     .argv;
   var targetName = argv._[1]
   var targetConf = packageJson.rodent.targets[targetName]
+  if (! targetConf) {
+    console.error("Invalid target:", targetName);
+    process.exit(1);
+  }
   if (argv.branch) {
     proceed(null, argv.branch);
   } else {
@@ -406,4 +438,20 @@ function getDefaultBranch(cb) {
       cb(null, stdout.trim());
     }
   });
+}
+
+function runWithEnv(optParser, packageJson) {
+  var argv = optParser.demand(1).argv;
+  var targetName = argv._[1];
+  var target = packageJson.rodent.targets[targetName];
+  if (! target) {
+    console.error("Invalid target:", targetName);
+    process.exit(1);
+  }
+  var args = argv._.slice(2)
+  var env = extend(extend({}, process.env), target.env)
+  var child = spawn('bash', ['-c', args.join(" ")], {
+    stdio: 'inherit',
+    env: env,
+  })
 }

@@ -87,4 +87,5 @@ Available commands:
     deploy  <target> [--branch branch] - deploy code
     abort   <target> - aborts a hanging deploy
     monitor <target> - tail logs on target
+    exec    <target> - output environment variables for target
 ```
