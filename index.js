@@ -31,7 +31,7 @@ var tasks = {
   },
   deploy: {
     fn: deploy,
-    info: "<target> [--branch branch] [--force] - deploy code",
+    info: "<target> [--branch branch] [--npmforce] - deploy code",
   },
   abort: {
     fn: abort,
@@ -147,14 +147,14 @@ function deploy(optParser, packageJson) {
   var argv = optParser
     .demand(1)
     .default('branch', null)
-    .default('force', null)
+    .default('npmforce', null)
     .argv;
 
   var targetName = argv._[1]
   var targetConf = packageJson.rodent.targets[targetName]
   var forceCommand = "";
 
-  if (argv.force) {
+  if (argv.npmforce) {
     forceCommand = " --force"
   }
 
