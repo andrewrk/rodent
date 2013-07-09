@@ -31,7 +31,7 @@ var tasks = {
   },
   deploy: {
     fn: deploy,
-    info: "<target> [--branch branch] - deploy code",
+    info: "<target> [--branch branch] [--npmforce] - deploy code",
   },
   abort: {
     fn: abort,
@@ -147,9 +147,17 @@ function deploy(optParser, packageJson) {
   var argv = optParser
     .demand(1)
     .default('branch', null)
+    .default('npmforce', null)
     .argv;
+
   var targetName = argv._[1]
   var targetConf = packageJson.rodent.targets[targetName]
+  var forceCommand = "";
+
+  if (argv.npmforce) {
+    forceCommand = " --force"
+  }
+
   if (! targetConf) {
     console.error("Invalid target:", targetName);
     process.exit(1);
@@ -181,7 +189,7 @@ function deploy(optParser, packageJson) {
       "git checkout origin/" + branch,
       "git submodule update",
       "npm prune",
-      "npm install",
+      "npm install" + forceCommand,
       env + " npm run deploy",
     ]);
   }
