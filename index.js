@@ -45,10 +45,6 @@ var tasks = {
     fn: log,
     info: "<target> - tail logs on target",
   },
-  web: {
-    fn: web,
-    info: "<target> - pm2 health web api endpoint",
-  },
   exec: {
     fn: runWithEnv,
     info: "<target> [command] - run command in target's environment",
@@ -240,21 +236,6 @@ function log(optParser, packageJson) {
   }
   packageJson.rodent.commands = packageJson.rodent.commands || {};
   var tailCmd = packageJson.rodent.commands.log || "tail -f *.log";
-  sshs(targetConf.ssh, [
-    "cd " + appPath(packageJson, targetName),
-    tailCmd
-  ]);
-}
-function web(optParser, packageJson) {
-  var argv = optParser.demand(1).argv;
-  var targetName = argv._[1]
-  var targetConf = packageJson.rodent.targets[targetName]
-  if (! targetConf) {
-    console.error("Invalid target:", targetName);
-    process.exit(1);
-  }
-  packageJson.rodent.commands = packageJson.rodent.commands || {};
-  var tailCmd = packageJson.rodent.commands.web;
   sshs(targetConf.ssh, [
     "cd " + appPath(packageJson, targetName),
     tailCmd
