@@ -41,8 +41,8 @@ var tasks = {
     fn: monitor,
     info: "<target> - monitor target processes",
   },
-  logs: {
-    fn: logs,
+  log: {
+    fn: log,
     info: "<target> - tail logs on target",
   },
   web: {
@@ -230,7 +230,7 @@ function monitor(optParser, packageJson) {
     tailCmd
   ]);
 }
-function logs(optParser, packageJson) {
+function log(optParser, packageJson) {
   var argv = optParser.demand(1).argv;
   var targetName = argv._[1]
   var targetConf = packageJson.rodent.targets[targetName]
@@ -239,7 +239,7 @@ function logs(optParser, packageJson) {
     process.exit(1);
   }
   packageJson.rodent.commands = packageJson.rodent.commands || {};
-  var tailCmd = packageJson.rodent.commands.logs || "tail -f *.log";
+  var tailCmd = packageJson.rodent.commands.log || "tail -f *.log";
   sshs(targetConf.ssh, [
     "cd " + appPath(packageJson, targetName),
     tailCmd
