@@ -39,7 +39,15 @@ var tasks = {
   },
   monitor: {
     fn: monitor,
+    info: "<target> - monitor target processes",
+  },
+  logs: {
+    fn: logs,
     info: "<target> - tail logs on target",
+  },
+  web: {
+    fn: web,
+    info: "<target> - pm2 health web api endpoint",
   },
   exec: {
     fn: runWithEnv,
@@ -216,7 +224,37 @@ function monitor(optParser, packageJson) {
     process.exit(1);
   }
   packageJson.rodent.commands = packageJson.rodent.commands || {};
-  var tailCmd = packageJson.rodent.commands.monitor || "tail -f *.log";
+  var tailCmd = packageJson.rodent.commands.monitor;
+  sshs(targetConf.ssh, [
+    "cd " + appPath(packageJson, targetName),
+    tailCmd
+  ]);
+}
+function logs(optParser, packageJson) {
+  var argv = optParser.demand(1).argv;
+  var targetName = argv._[1]
+  var targetConf = packageJson.rodent.targets[targetName]
+  if (! targetConf) {
+    console.error("Invalid target:", targetName);
+    process.exit(1);
+  }
+  packageJson.rodent.commands = packageJson.rodent.commands || {};
+  var tailCmd = packageJson.rodent.commands.logs || "tail -f *.log";
+  sshs(targetConf.ssh, [
+    "cd " + appPath(packageJson, targetName),
+    tailCmd
+  ]);
+}
+function web(optParser, packageJson) {
+  var argv = optParser.demand(1).argv;
+  var targetName = argv._[1]
+  var targetConf = packageJson.rodent.targets[targetName]
+  if (! targetConf) {
+    console.error("Invalid target:", targetName);
+    process.exit(1);
+  }
+  packageJson.rodent.commands = packageJson.rodent.commands || {};
+  var tailCmd = packageJson.rodent.commands.web;
   sshs(targetConf.ssh, [
     "cd " + appPath(packageJson, targetName),
     tailCmd
