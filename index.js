@@ -288,6 +288,7 @@ function qqescape(it){
 function ssh(conf, cmd){
   conf.hosts.forEach(function(host) {
     var args = [
+      "-t",
       "-o", "ForwardAgent=yes",
       "-o", "StrictHostKeyChecking=no",
       "-p", conf.port,
