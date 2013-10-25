@@ -179,14 +179,6 @@ function deploy(optParser, packageJson) {
       return;
     }
 
-    if (packageJson.rodent.flowdock) {
-      notifyFlowdock(packageJson, targetName, branch);
-    }
-
-    if (packageJson.rodent.librato) {
-      notifyLibrato(packageJson, targetName, branch);
-    }
-
     sshs(targetConf.ssh, [
       "cd " + appPath(packageJson, targetName),
       "git fetch",
@@ -196,6 +188,14 @@ function deploy(optParser, packageJson) {
       "npm install" + forceCommand,
       env + " npm run deploy",
     ]);
+
+    if (packageJson.rodent.flowdock) {
+      notifyFlowdock(packageJson, targetName, branch);
+    }
+
+    if (packageJson.rodent.librato) {
+      notifyLibrato(packageJson, targetName, branch);
+    }
   }
 }
 function abort(optParser, packageJson) {
