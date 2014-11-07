@@ -2,8 +2,6 @@
 
 npm package to deploy node.js apps.
 
-![](http://static.fjcdn.com/pictures/epic_c3c08f_738620.jpg)
-
 ## Usage
 
 1. Install globally with npm:
@@ -69,10 +67,10 @@ sudo npm install -g rodent
 3. Install and configure the prerequisites on your targets:
 
   * [authbind](http://www.debian-administration.org/articles/386)
-  * node.js v0.8.x
+  * node.js v0.10.x
   * git
 
-4. Use the CLI to deploy your code like a boss:
+4. Use the CLI to deploy your code:
 
 ```
 Usage: rodent [command]
