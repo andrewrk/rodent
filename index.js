@@ -307,7 +307,7 @@ function sshs(conf, cmds){
 function inlineEnv(it){
   var k, v, items = [];
   for (k in it) {
-    v = it[k] === null ? "" : it[k].toString();
+    v = it[k] == null ? "" : it[k].toString();
     items.push(k + "=\"" + qqescape(v) + "\"");
   }
   return items.join(" ");
@@ -478,7 +478,7 @@ function runWithEnv(optParser, packageJson) {
     process.exit(1);
   }
   var args = argv._.slice(2)
-  var env = extend(extend({}, target.env), process.env)
+  var env = extend(extend({}, process.env), target.env)
   var child = spawn('bash', ['-c', args.join(" ")], {
     stdio: 'inherit',
     env: env,
