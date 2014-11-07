@@ -20,6 +20,8 @@ sudo npm install -g rodent
     "type": "git"
   },
   "scripts": {
+    "start": "naught start server.js",
+    "stop": "naught stop",
     "deploy": "naught deploy",
     "deploy-abort": "naught deploy-abort"
   },
