@@ -77,13 +77,14 @@ Usage: rodent [command]
 
 Available commands:
 
-    list    list available deploy targets
-    init    <target> - prepares target to accept deployments
-    start   <target> - starts the remote server
-    stop    <target> - stops the remote server
-    diff    <target> [--branch branch] - display what will be deployed on target
-    deploy  <target> [--branch branch] - deploy code
-    abort   <target> - aborts a hanging deploy
-    monitor <target> - tail logs on target
-    exec    <target> - output environment variables for target
+    list	list available deploy targets
+    init	<target> - prepares target to accept deployments
+    start	<target> - starts the remote server
+    stop	<target> - stops the remote server
+    diff	<target> [--branch branch] - display what will be deployed on target
+    deploy	<target> [--branch branch] [--npmforce] - deploy code
+    abort	<target> - aborts a hanging deploy
+    monitor	<target> - monitor target processes
+    log	<target> - tail logs on target
+    exec	<target> [command] - run command in target's environment
 ```
