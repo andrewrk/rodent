@@ -27,7 +27,8 @@ sudo npm install -g rodent
   },
   "rodent": {
     "flowdock": {
-      "token": "38eb39023d382adff2eff209effb398f"
+      "token": "38eb39023d382adff2eff209effb398f",
+      "fromAddress": "foo@example.com"
     },
     "commands": {
       "monitor": "tail -f *.log"

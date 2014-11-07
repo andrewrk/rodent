@@ -414,7 +414,7 @@ function notifyFlowdock(packageJson, targetName, branch) {
     var tags    = ["#deploy", "#"+packageJson.name, "#"+targetName];
     var payload = {
       source: "rodent",
-      from_address: "rodent@indabamusic.com",
+      from_address: packageJson.rodent.flowdock.fromAddress,
       project: packageJson.name,
       subject: subject,
       content: content,

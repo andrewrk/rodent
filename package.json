@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/indabamusic/rodent.git"
+    "url": "git://github.com/andrewrk/rodent.git"
   },
   "dependencies": {
     "optimist": "~0.6.1",
@@ -18,5 +18,11 @@
   },
   "bin": {
     "rodent": "index.js"
-  }
+  },
+  "bugs": {
+    "url": "https://github.com/andrewrk/rodent/issues"
+  },
+  "devDependencies": {},
+  "author": "Andrew Kelley <superjoe30@gmail.com>",
+  "license": "MIT"
 }
