@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
-var optimist = require('optimist')
-  , spawn = require('child_process').spawn
-  , path = require('path')
-  , Batch = require('batch')
-  , superagent = require('superagent')
-  , semver = require('semver')
-  , rodentVersion = require('./package').version
+var optimist = require('optimist');
+var spawn = require('child_process').spawn;
+var path = require('path');
+var Pend = require('pend');
+var superagent = require('superagent');
+var semver = require('semver');
+var rodentVersion = require('./package').version;
 
 var tasks = {
   list: {
@@ -336,8 +336,9 @@ function appPath(packageJson, targetName){
 
 function getDeployDiff(packageJson, targetName, branch, format, cb) {
   var exec = require('child_process').exec;
-  var batch = new Batch();
-  batch.push(function(cb) {
+  var pend = new Pend();
+  var revision;
+  pend.go(function(cb) {
     var sshConf = packageJson.rodent.targets[targetName].ssh;
     var firstHost = sshConf.hosts[0];
     var destAppPath = appPath(packageJson, targetName);
@@ -353,11 +354,12 @@ function getDeployDiff(packageJson, targetName, branch, format, cb) {
         err.cmd = cmd;
         cb(err);
       } else {
-        cb(null, stdout.trim());
+        revision = stdout.trim();
+        cb();
       }
     });
   });
-  batch.push(function(cb) {
+  pend.go(function(cb) {
     var cmd = "git fetch origin";
     exec(cmd, function(err, stdout, stderr) {
       if (err) {
@@ -370,10 +372,9 @@ function getDeployDiff(packageJson, targetName, branch, format, cb) {
       }
     });
   });
-  batch.end(function(err, results) {
+  pend.wait(function(err) {
     if (err) return cb(err);
-    var rev = results[0];
-    var cmd = "git log --pretty=format:\"" + format + "\" " + rev + "..origin/" + branch;
+    var cmd = "git log --pretty=format:\"" + format + "\" " + revision + "..origin/" + branch;
     exec(cmd, function(err, stdout, stderr) {
       if (err) {
         err.stderr = stderr;
