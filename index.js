@@ -41,10 +41,6 @@ var tasks = {
     fn: monitor,
     info: "<target> - monitor target processes",
   },
-  log: {
-    fn: log,
-    info: "<target> - tail logs on target",
-  },
   exec: {
     fn: runWithEnv,
     info: "<target> [command] - run command in target's environment",
@@ -220,22 +216,7 @@ function monitor(optParser, packageJson) {
     process.exit(1);
   }
   packageJson.rodent.commands = packageJson.rodent.commands || {};
-  var tailCmd = packageJson.rodent.commands.monitor;
-  sshs(targetConf.ssh, [
-    "cd " + appPath(packageJson, targetName),
-    tailCmd
-  ]);
-}
-function log(optParser, packageJson) {
-  var argv = optParser.demand(1).argv;
-  var targetName = argv._[1]
-  var targetConf = packageJson.rodent.targets[targetName]
-  if (! targetConf) {
-    console.error("Invalid target:", targetName);
-    process.exit(1);
-  }
-  packageJson.rodent.commands = packageJson.rodent.commands || {};
-  var tailCmd = packageJson.rodent.commands.log || "tail -f *.log";
+  var tailCmd = packageJson.rodent.commands.monitor || "tail -f *.log";
   sshs(targetConf.ssh, [
     "cd " + appPath(packageJson, targetName),
     tailCmd

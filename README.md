@@ -85,6 +85,5 @@ Available commands:
     deploy	<target> [--branch branch] [--npmforce] - deploy code
     abort	<target> - aborts a hanging deploy
     monitor	<target> - monitor target processes
-    log	<target> - tail logs on target
     exec	<target> [command] - run command in target's environment
 ```
